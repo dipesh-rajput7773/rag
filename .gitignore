@@ -1,0 +1,17 @@
+# Qdrant local storage
+rag-crm/backend/qdrant_local/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# Node
+node_modules/
