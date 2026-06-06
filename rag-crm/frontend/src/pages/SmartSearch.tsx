@@ -1,20 +1,21 @@
-import { useState, useRef, useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import {
+  BrainCircuit, Clock, Flame, Loader2, Search, Send, Snowflake,
+  Target, Thermometer, Users,
+} from 'lucide-react'
+
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { searchLeads } from '@/lib/api'
-import {
-  Search, Send, Sparkles, Loader2, MessageSquare,
-  Users, Flame, Thermometer, Snowflake, Clock,
-} from 'lucide-react'
-import type { LeadResult, SearchResponse } from '@/types'
+import type { SearchResponse } from '@/types'
 
 const suggestions = [
-  'Who should I call today?',
-  'Show me all hot leads',
-  'Which leads are ready to sign?',
-  'How many warm leads do I have?',
-  'Find leads interested in our product',
+  'Which leads mention budget or pricing?',
+  'Who should I follow up with today?',
+  'Find leads ready for proposal',
+  'Show hot leads with urgent notes',
+  'How many warm leads are in pipeline?',
 ]
 
 const statusIcon = { hot: Flame, warm: Thermometer, cold: Snowflake } as const
@@ -33,67 +34,73 @@ export default function SmartSearch() {
     }
   }, [response])
 
-  const handleSearch = async (q?: string) => {
-    const searchQuery = q || query
+  const handleSearch = async (nextQuery?: string) => {
+    const searchQuery = nextQuery || query
     if (!searchQuery.trim()) return
+
     setQuery(searchQuery)
     setLoading(true)
     try {
       const res = await searchLeads(searchQuery, 10)
       setResponse(res)
-      setHistory(prev => [{ query: searchQuery, response: res }, ...prev.slice(0, 9)])
+      setHistory((prev) => [{ query: searchQuery, response: res }, ...prev.slice(0, 7)])
     } catch {
       setResponse({
         query: searchQuery,
-        answer: 'Sorry, I encountered an error. Please try again.',
+        answer: 'Search failed. Please try again.',
         results: [],
         total_results: 0,
       })
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Smart Search</h1>
-        <p className="text-gray-500 mt-1">Ask natural language questions about your leads</p>
+    <div className="mx-auto max-w-6xl space-y-6">
+      <div className="grid gap-5 lg:grid-cols-[1fr_280px] lg:items-end">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-[0.16em] text-primary-700">Deal Intel</p>
+          <h1 className="mt-2 text-3xl font-semibold text-gray-950">Ask your lead base</h1>
+          <p className="mt-1 text-gray-600">Retrieval-augmented answers grounded in the accounts you have indexed.</p>
+        </div>
+        <div className="rounded-lg border border-gray-200 bg-white p-4">
+          <div className="flex items-center gap-2 text-sm font-medium text-gray-950">
+            <Target className="h-4 w-4 text-primary-700" />
+            Good questions
+          </div>
+          <p className="mt-2 text-xs leading-5 text-gray-500">Use buyer intent, objections, timeline, geography, budget, or next step language.</p>
+        </div>
       </div>
 
-      <Card className="border-primary-100 bg-gradient-to-br from-white via-primary-50/30 to-white">
-        <CardContent className="p-6">
-          <div className="flex gap-3">
+      <Card>
+        <CardContent className="p-5">
+          <div className="flex flex-col gap-3 md:flex-row">
             <div className="relative flex-1">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
-                placeholder="Ask anything about your leads..."
+                placeholder="Ask a revenue question..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                className="w-full h-14 pl-12 pr-4 rounded-xl border-2 border-gray-200 bg-white text-base focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
+                className="h-14 w-full rounded-md border border-gray-300 bg-white pl-12 pr-4 text-base focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
             </div>
-            <Button
-              size="lg"
-              variant="gradient"
-              className="h-14 px-6 gap-2"
-              onClick={() => handleSearch()}
-              disabled={loading}
-            >
-              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+            <Button size="lg" className="h-14 gap-2" onClick={() => handleSearch()} disabled={loading}>
+              {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
               Search
             </Button>
           </div>
 
           <div className="mt-4 flex flex-wrap gap-2">
-            {suggestions.map((s) => (
+            {suggestions.map((suggestion) => (
               <button
-                key={s}
-                onClick={() => handleSearch(s)}
-                className="px-3 py-1.5 rounded-full bg-white border border-gray-200 text-xs text-gray-500 hover:border-primary-300 hover:text-primary-600 hover:bg-primary-50 transition-all cursor-pointer"
+                key={suggestion}
+                onClick={() => handleSearch(suggestion)}
+                className="cursor-pointer rounded-md border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs text-gray-600 transition-colors hover:border-primary-200 hover:bg-primary-50 hover:text-primary-800"
               >
-                {s}
+                {suggestion}
               </button>
             ))}
           </div>
@@ -103,8 +110,8 @@ export default function SmartSearch() {
       {loading && (
         <Card>
           <CardContent className="p-8 text-center">
-            <Loader2 className="w-8 h-8 animate-spin text-primary-600 mx-auto mb-3" />
-            <p className="text-sm text-gray-500">Searching through your leads...</p>
+            <Loader2 className="mx-auto mb-3 h-8 w-8 animate-spin text-primary-700" />
+            <p className="text-sm text-gray-500">Retrieving matching accounts...</p>
           </CardContent>
         </Card>
       )}
@@ -113,96 +120,84 @@ export default function SmartSearch() {
         <div ref={resultsRef} className="space-y-4">
           <Card>
             <CardContent className="p-6">
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-600 to-purple-600 flex items-center justify-center shrink-0">
-                  <Sparkles className="w-5 h-5 text-white" />
+              <div className="flex items-start gap-4">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-gray-950 text-white">
+                  <BrainCircuit className="h-5 w-5" />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-400 mb-1">AI Response</p>
-                  <p className="text-gray-900 leading-relaxed">{response.answer}</p>
-                  <div className="flex items-center gap-3 mt-3 text-xs text-gray-400">
-                    <span className="flex items-center gap-1"><Search className="w-3 h-3" /> {response.total_results} results</span>
-                    <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> Just now</span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">Grounded answer</p>
+                  <p className="mt-2 leading-7 text-gray-900">{response.answer}</p>
+                  <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-gray-500">
+                    <span className="inline-flex items-center gap-1"><Search className="h-3.5 w-3.5" /> {response.total_results} matched accounts</span>
+                    <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> Just now</span>
                   </div>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {response.results.length > 0 && (
-            <Card>
-              <CardContent className="p-0">
-                <div className="divide-y divide-gray-100">
-                  {response.results.map((lead) => {
-                    const Icon = statusIcon[lead.status as keyof typeof statusIcon] || Users
-                    const color = statusColor[lead.status as keyof typeof statusColor] || 'default'
-                    return (
-                      <div key={lead.id} className="p-4 hover:bg-gray-50 transition-colors">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
-                              <Users className="w-5 h-5 text-gray-500" />
+          {response.results.length > 0 ? (
+            <div className="grid gap-3">
+              {response.results.map((lead) => {
+                const Icon = statusIcon[lead.status as keyof typeof statusIcon] || Users
+                const color = statusColor[lead.status as keyof typeof statusColor] || 'default'
+                return (
+                  <Card key={lead.id}>
+                    <CardContent className="p-4">
+                      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-gray-100">
+                              <Users className="h-5 w-5 text-gray-500" />
                             </div>
-                            <div className="min-w-0">
-                              <p className="text-sm font-medium text-gray-900">{lead.name}</p>
-                              <p className="text-xs text-gray-500">{lead.email}</p>
+                            <div>
+                              <p className="font-medium text-gray-950">{lead.name}</p>
+                              <p className="text-sm text-gray-500">{lead.email}</p>
                             </div>
                           </div>
-                          <div className="flex items-center gap-3 shrink-0">
-                            <Badge variant={color}>
-                              <Icon className="w-3 h-3 mr-1" />
-                              {lead.status}
-                            </Badge>
-                            <span className="text-xs font-medium text-gray-400">
-                              {(lead.relevance_score * 100).toFixed(0)}% match
-                            </span>
-                          </div>
+                          {lead.notes && (
+                            <p className="mt-3 text-sm leading-6 text-gray-600">{lead.notes}</p>
+                          )}
                         </div>
-                        {lead.notes && (
-                          <p className="mt-2 text-sm text-gray-500 pl-13">{lead.notes}</p>
-                        )}
+                        <div className="flex shrink-0 items-center gap-3">
+                          <Badge variant={color}>
+                            <Icon className="mr-1 h-3.5 w-3.5" />
+                            {lead.status}
+                          </Badge>
+                          <span className="rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">
+                            {(lead.relevance_score * 100).toFixed(0)}% match
+                          </span>
+                        </div>
                       </div>
-                    )
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {response.results.length === 0 && !loading && (
+                    </CardContent>
+                  </Card>
+                )
+              })}
+            </div>
+          ) : (
             <Card>
               <CardContent className="p-8 text-center">
-                <MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-500">No matching leads found</p>
+                <BrainCircuit className="mx-auto mb-3 h-12 w-12 text-gray-300" />
+                <p className="font-medium text-gray-950">No matching accounts found</p>
+                <p className="mt-1 text-sm text-gray-500">Try asking with buyer intent, budget, location, or next-step language.</p>
               </CardContent>
             </Card>
           )}
         </div>
       )}
 
-      {!response && !loading && (
-        <Card>
-          <CardContent className="p-8 text-center">
-            <Sparkles className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500 text-sm">
-              Ask a question above to search your leads using AI
-            </p>
-          </CardContent>
-        </Card>
-      )}
-
       {history.length > 0 && (
         <Card>
           <CardContent className="p-4">
-            <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-3">Search History</p>
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">Recent questions</p>
             <div className="flex flex-wrap gap-2">
-              {history.map((h, i) => (
+              {history.map((item, index) => (
                 <button
-                  key={i}
-                  onClick={() => handleSearch(h.query)}
-                  className="px-3 py-1.5 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
+                  key={`${item.query}-${index}`}
+                  onClick={() => handleSearch(item.query)}
+                  className="cursor-pointer rounded-md border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100"
                 >
-                  {h.query}
+                  {item.query}
                 </button>
               ))}
             </div>

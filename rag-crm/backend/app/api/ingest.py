@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 def lead_search_text(lead) -> str:
     return " ".join(
-        value for value in [lead.name, lead.email, lead.status, lead.notes or ""] if value
+        value for value in [lead.name, lead.company or "", lead.email, lead.status, lead.notes or ""] if value
     )
 
 
@@ -27,8 +27,10 @@ def lead_metadata(lead, user_id: int) -> dict:
         "user_id": str(user_id),
         "name": lead.name,
         "email": lead.email,
+        "company": lead.company or "",
         "status": lead.status,
         "notes": lead.notes or "",
+        "phone": lead.phone or "",
     }
 
 

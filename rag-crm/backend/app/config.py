@@ -2,7 +2,7 @@ from pydantic_settings import BaseSettings
 from functools import lru_cache
 
 class Settings(BaseSettings):
-    APP_NAME: str = "RAG CRM"
+    APP_NAME: str = "DealGraph"
     PORT: int = 8000
     MYSQL_URL: str
     QDRANT_URL: str = ""

@@ -1,5 +1,5 @@
 import axios from 'axios'
-import type { SearchResponse, IngestResponse, BulkIngestResponse, Lead, DashboardStats } from '@/types'
+import type { SearchResponse, IngestResponse, BulkIngestResponse, Lead, PaginatedLeads, DashboardStats } from '@/types'
 
 const api = axios.create({
   baseURL: '/api/v1',
@@ -39,9 +39,37 @@ export async function ingestLead(lead: Omit<Lead, 'id'>): Promise<IngestResponse
   return data
 }
 
-export async function getLeads(): Promise<Lead[]> {
-  const { data } = await api.get('/leads')
+export async function getLeads(params?: {
+  skip?: number
+  limit?: number
+  status?: string
+}): Promise<PaginatedLeads> {
+  const { data } = await api.get('/leads', { params })
   return data
+}
+
+export async function updateLead(
+  id: number,
+  data: Partial<Omit<Lead, 'id' | 'created_at' | 'updated_at' | 'relevance_score'>>,
+): Promise<Lead> {
+  const { data: res } = await api.put(`/leads/${id}`, data)
+  return res
+}
+
+export async function deleteLead(id: number): Promise<void> {
+  await api.delete(`/leads/${id}`)
+}
+
+export async function exportLeads(): Promise<void> {
+  const response = await api.get('/leads/export', { responseType: 'blob' })
+  const url = window.URL.createObjectURL(new Blob([response.data]))
+  const link = document.createElement('a')
+  link.href = url
+  link.setAttribute('download', 'leads.csv')
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  window.URL.revokeObjectURL(url)
 }
 
 export async function bulkIngest(leads: Omit<Lead, 'id'>[]): Promise<BulkIngestResponse> {

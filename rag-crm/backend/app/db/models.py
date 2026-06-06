@@ -33,6 +33,9 @@ class Lead(Base):
     email = Column(String(100), nullable=False)
     status = Column(String(50), nullable=False)
     notes = Column(Text, nullable=True)
+    phone = Column(String(20), nullable=True)
+    company = Column(String(200), nullable=True)
+    source = Column(String(100), nullable=True, default="manual")
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, onupdate=func.now())
 

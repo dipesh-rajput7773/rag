@@ -1,20 +1,24 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
+import { Bell, Check, Copy, CreditCard, Key, ShieldCheck, User } from 'lucide-react'
+
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
-import {
-  User, Key, CreditCard, Copy, Check, RefreshCw,
-  Mail, Bell, Shield, ChevronRight,
-} from 'lucide-react'
 
 export default function Settings() {
   const [copied, setCopied] = useState<string | null>(null)
-  const [showNewKey, setShowNewKey] = useState(false)
+  const user = useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem('user') || '{}')
+    } catch {
+      return {}
+    }
+  }, [])
 
   const apiKeys = [
-    { id: 1, name: 'Production', key: 'rag_live_7xK3mP9qR2vY...', created: '2026-01-15', lastUsed: '2026-06-04' },
-    { id: 2, name: 'Development', key: 'rag_test_aB4cD8eF1gH...', created: '2026-03-20', lastUsed: '2026-06-05' },
+    { id: 1, name: 'Production', key: 'rag_live_7xK3mP9qR2vY...', lastUsed: '2026-06-05' },
+    { id: 2, name: 'Development', key: 'rag_test_aB4cD8eF1gH...', lastUsed: '2026-06-04' },
   ]
 
   const copyToClipboard = (text: string, id: string) => {
@@ -23,120 +27,128 @@ export default function Settings() {
     setTimeout(() => setCopied(null), 2000)
   }
 
-  const planDetails = {
-    name: 'Professional',
-    price: 79,
-    status: 'active',
-    nextBilling: '2026-07-05',
-    features: ['10,000 leads', '5,000 AI searches', 'Real-time analytics', 'API access'],
-  }
-
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <div className="mx-auto max-w-4xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-        <p className="text-gray-500 mt-1">Manage your account and workspace</p>
+        <p className="text-sm font-semibold uppercase tracking-[0.16em] text-primary-700">Workspace</p>
+        <h1 className="mt-2 text-3xl font-semibold text-gray-950">Settings</h1>
+        <p className="mt-1 text-gray-600">Manage account details, access, and revenue workspace preferences.</p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <User className="w-5 h-5 text-primary-600" />
+          <CardTitle className="flex items-center gap-2">
+            <User className="h-5 w-5 text-primary-700" />
             Profile
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid sm:grid-cols-2 gap-4">
-            <Input label="Full Name" defaultValue="John Doe" />
-            <Input label="Email" type="email" defaultValue="john@company.com" />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Input label="Full name" defaultValue={user.name || ''} />
+            <Input label="Email" type="email" defaultValue={user.email || ''} />
           </div>
-          <Button variant="gradient">Save Changes</Button>
+          <Button>Save changes</Button>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <CreditCard className="w-5 h-5 text-primary-600" />
+          <CardTitle className="flex items-center gap-2">
+            <CreditCard className="h-5 w-5 text-primary-700" />
             Subscription
           </CardTitle>
           <Badge variant="success">Active</Badge>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-primary-50 to-purple-50 border border-primary-100">
-            <div>
-              <p className="text-lg font-semibold text-gray-900">{planDetails.name} Plan</p>
-              <p className="text-sm text-gray-500">${planDetails.price}/month · Next billing {planDetails.nextBilling}</p>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {planDetails.features.map((f) => (
-                  <Badge key={f} variant="default">{f}</Badge>
-                ))}
+          <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-lg font-semibold capitalize text-gray-950">{user.plan || 'Free'} plan</p>
+                <p className="mt-1 text-sm text-gray-500">Current workspace plan for indexed leads and RAG searches.</p>
               </div>
+              <Button variant="outline">Manage plan</Button>
             </div>
-            <Button variant="outline" className="shrink-0 gap-2">
-              Manage <ChevronRight className="w-4 h-4" />
-            </Button>
+            <div className="mt-4 grid gap-2 sm:grid-cols-3">
+              {['Lead indexing', 'Deal search', 'Usage history'].map((feature) => (
+                <div key={feature} className="rounded-md bg-white px-3 py-2 text-sm text-gray-700">
+                  {feature}
+                </div>
+              ))}
+            </div>
           </div>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Key className="w-5 h-5 text-primary-600" />
-            API Keys
+          <CardTitle className="flex items-center gap-2">
+            <ShieldCheck className="h-5 w-5 text-primary-700" />
+            Data boundaries
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="rounded-lg border border-gray-200 bg-white p-4">
+              <p className="font-medium text-gray-950">Authenticated search</p>
+              <p className="mt-1 text-sm leading-6 text-gray-600">Search and ingest routes require a signed-in user.</p>
+            </div>
+            <div className="rounded-lg border border-gray-200 bg-white p-4">
+              <p className="font-medium text-gray-950">User-scoped retrieval</p>
+              <p className="mt-1 text-sm leading-6 text-gray-600">Vector search filters by workspace owner before answers are generated.</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Key className="h-5 w-5 text-primary-700" />
+            API keys
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-3">
-            {apiKeys.map((k) => (
-              <div key={k.id} className="flex items-center justify-between p-3 rounded-lg bg-gray-50 border border-gray-200">
+            {apiKeys.map((apiKey) => (
+              <div key={apiKey.id} className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-3">
                 <div>
-                  <p className="text-sm font-medium text-gray-900">{k.name}</p>
-                  <p className="text-xs font-mono text-gray-400">{k.key}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">Last used: {k.lastUsed}</p>
+                  <p className="text-sm font-medium text-gray-950">{apiKey.name}</p>
+                  <p className="font-mono text-xs text-gray-500">{apiKey.key}</p>
+                  <p className="mt-0.5 text-xs text-gray-400">Last used: {apiKey.lastUsed}</p>
                 </div>
                 <button
-                  onClick={() => copyToClipboard(k.key, `key-${k.id}`)}
-                  className="p-2 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer"
+                  onClick={() => copyToClipboard(apiKey.key, `key-${apiKey.id}`)}
+                  className="cursor-pointer rounded-md p-2 transition-colors hover:bg-gray-200"
+                  aria-label="Copy API key"
                 >
-                  {copied === `key-${k.id}` ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4 text-gray-400" />}
+                  {copied === `key-${apiKey.id}` ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4 text-gray-500" />}
                 </button>
               </div>
             ))}
           </div>
-          <Button variant="outline" className="gap-2" onClick={() => setShowNewKey(!showNewKey)}>
-            <RefreshCw className="w-4 h-4" /> Generate New Key
-          </Button>
-          {showNewKey && (
-            <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200">
-              <p className="text-sm font-medium text-emerald-800">New API Key Generated</p>
-              <p className="text-xs font-mono text-emerald-600 mt-1">rag_live_xK8mN3pQ5rV7yB2cF9jL0wS4</p>
-              <p className="text-xs text-emerald-500 mt-1">Make sure to copy this key — you won't be able to see it again!</p>
-            </div>
-          )}
+          <Button variant="outline">Generate new key</Button>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Bell className="w-5 h-5 text-primary-600" />
+          <CardTitle className="flex items-center gap-2">
+            <Bell className="h-5 w-5 text-primary-700" />
             Notifications
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {[
-            { label: 'Email notifications for new leads', enabled: true },
-            { label: 'Weekly digest report', enabled: true },
-            { label: 'Product updates and features', enabled: false },
+            { label: 'Daily hot lead digest', enabled: true },
+            { label: 'Weekly search usage summary', enabled: true },
+            { label: 'Pipeline import reminders', enabled: false },
             { label: 'Usage limit alerts', enabled: true },
-          ].map((n) => (
-            <div key={n.label} className="flex items-center justify-between py-2">
-              <span className="text-sm text-gray-700">{n.label}</span>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" defaultChecked={n.enabled} className="sr-only peer" />
-                <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary-600" />
+          ].map((item) => (
+            <div key={item.label} className="flex items-center justify-between py-2">
+              <span className="text-sm text-gray-700">{item.label}</span>
+              <label className="relative inline-flex cursor-pointer items-center">
+                <input type="checkbox" defaultChecked={item.enabled} className="peer sr-only" />
+                <div className="h-5 w-9 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-4 after:w-4 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary-300" />
               </label>
             </div>
           ))}

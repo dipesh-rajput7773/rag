@@ -1,92 +1,101 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useEffect, useMemo, useState } from 'react'
+import { BarChart3, BrainCircuit, Flame, Search, Thermometer, Users } from 'lucide-react'
 import {
-  BarChart3, TrendingUp, Users, Search, ArrowUp, ArrowDown,
-} from 'lucide-react'
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, LineChart, Line,
+  Bar, BarChart, CartesianGrid, Cell, Pie, PieChart,
+  ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from 'recharts'
 
-const leadStatusData = [
-  { name: 'Hot', value: 12, color: '#ef4444' },
-  { name: 'Warm', value: 25, color: '#f59e0b' },
-  { name: 'Cold', value: 8, color: '#3b82f6' },
-]
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { getDashboardStats } from '@/lib/api'
+import type { DashboardStats } from '@/types'
 
-const searchTrendData = [
-  { month: 'Jan', searches: 45, leads: 30 },
-  { month: 'Feb', searches: 52, leads: 38 },
-  { month: 'Mar', searches: 68, leads: 45 },
-  { month: 'Apr', searches: 55, leads: 42 },
-  { month: 'May', searches: 72, leads: 55 },
-  { month: 'Jun', searches: 88, leads: 62 },
-]
-
-const topLeadsData = [
-  { name: 'Sarah Johnson', value: 96 },
-  { name: 'Mike Chen', value: 88 },
-  { name: 'Emily Davis', value: 82 },
-  { name: 'Alex Rivera', value: 75 },
-  { name: 'Lisa Park', value: 71 },
-]
+const defaultStats: DashboardStats = {
+  total_leads: 0,
+  hot_leads: 0,
+  warm_leads: 0,
+  cold_leads: 0,
+  total_searches: 0,
+  recent_searches: [],
+  lead_trend: [],
+}
 
 export default function Analytics() {
+  const [stats, setStats] = useState<DashboardStats>(defaultStats)
+
+  useEffect(() => {
+    getDashboardStats().then(setStats).catch(() => {})
+  }, [])
+
+  const leadStatusData = useMemo(() => [
+    { name: 'Hot', value: stats.hot_leads, color: '#ef4444' },
+    { name: 'Warm', value: stats.warm_leads, color: '#f59e0b' },
+    { name: 'Cold', value: stats.cold_leads, color: '#64748b' },
+  ], [stats])
+
+  const signalData = useMemo(() => [
+    { name: 'Accounts', value: stats.total_leads },
+    { name: 'Searches', value: stats.total_searches },
+    { name: 'Recent', value: stats.recent_searches.length },
+  ], [stats])
+
+  const cards = [
+    { label: 'Indexed accounts', value: stats.total_leads, icon: Users, help: 'Available to retrieval' },
+    { label: 'Hot signals', value: stats.hot_leads, icon: Flame, help: 'Immediate follow-up pool' },
+    { label: 'Warm signals', value: stats.warm_leads, icon: Thermometer, help: 'Nurture and proposal pool' },
+    { label: 'Search volume', value: stats.total_searches, icon: BrainCircuit, help: 'RAG questions asked' },
+  ]
+
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="mx-auto max-w-7xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
-        <p className="text-gray-500 mt-1">Track performance and usage metrics</p>
+        <p className="text-sm font-semibold uppercase tracking-[0.16em] text-primary-700">Signal Analytics</p>
+        <h1 className="mt-2 text-3xl font-semibold text-gray-950">Pipeline intelligence</h1>
+        <p className="mt-1 text-gray-600">Measure whether the team is building and querying useful deal context.</p>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          { label: 'Total Searches', value: '382', change: '+12%', up: true, icon: Search },
-          { label: 'Avg. Match Rate', value: '87%', change: '+5%', up: true, icon: TrendingUp },
-          { label: 'Leads Converted', value: '45', change: '+8%', up: true, icon: Users },
-          { label: 'Response Time', value: '1.2s', change: '-0.3s', up: false, icon: BarChart3 },
-        ].map(({ label, value, change, up, icon: Icon }) => (
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {cards.map(({ label, value, icon: Icon, help }) => (
           <Card key={label}>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-sm text-gray-500">{label}</p>
-                <div className="w-9 h-9 rounded-lg bg-primary-50 flex items-center justify-center">
-                  <Icon className="w-4 h-4 text-primary-600" />
+            <CardContent className="p-5">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm text-gray-500">{label}</p>
+                  <p className="mt-2 text-3xl font-semibold text-gray-950">{value}</p>
+                  <p className="mt-1 text-xs text-gray-500">{help}</p>
+                </div>
+                <div className="rounded-md border border-gray-200 bg-gray-50 p-2">
+                  <Icon className="h-5 w-5 text-primary-700" />
                 </div>
               </div>
-              <p className="text-2xl font-bold text-gray-900">{value}</p>
-              <span className={`inline-flex items-center gap-0.5 text-xs font-medium mt-1 ${up ? 'text-emerald-600' : 'text-red-600'}`}>
-                {up ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
-                {change} vs last month
-              </span>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6">
+      <div className="grid gap-6 xl:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Lead Distribution</CardTitle>
+            <CardTitle>Lead signal distribution</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={leadStatusData} cx="50%" cy="50%" innerRadius={80} outerRadius={120} paddingAngle={5} dataKey="value">
-                    {leadStatusData.map((entry, i) => (
-                      <Cell key={i} fill={entry.color} />
+                  <Pie data={leadStatusData} cx="50%" cy="50%" innerRadius={78} outerRadius={118} paddingAngle={4} dataKey="value">
+                    {leadStatusData.map((entry) => (
+                      <Cell key={entry.name} fill={entry.color} />
                     ))}
                   </Pie>
                   <Tooltip />
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <div className="flex justify-center gap-6 mt-2">
-              {leadStatusData.map((d) => (
-                <div key={d.name} className="flex items-center gap-2 text-sm">
-                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: d.color }} />
-                  <span className="text-gray-600">{d.name}</span>
-                  <span className="font-medium text-gray-900">{d.value}</span>
+            <div className="mt-2 flex justify-center gap-5">
+              {leadStatusData.map((item) => (
+                <div key={item.name} className="flex items-center gap-2 text-sm">
+                  <span className="h-3 w-3 rounded-sm" style={{ backgroundColor: item.color }} />
+                  <span className="text-gray-600">{item.name}</span>
+                  <span className="font-medium text-gray-950">{item.value}</span>
                 </div>
               ))}
             </div>
@@ -95,62 +104,72 @@ export default function Analytics() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Activity Trend</CardTitle>
+            <CardTitle>Workspace activity</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={searchTrendData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#9ca3af" />
-                  <YAxis tick={{ fontSize: 12 }} stroke="#9ca3af" />
+                <BarChart data={signalData}>
+                  <CartesianGrid stroke="#e5e7eb" strokeDasharray="3 3" />
+                  <XAxis dataKey="name" tick={{ fontSize: 12 }} stroke="#6b7280" />
+                  <YAxis tick={{ fontSize: 12 }} stroke="#6b7280" />
                   <Tooltip />
-                  <Line type="monotone" dataKey="searches" stroke="#3b82f6" strokeWidth={2} name="Searches" />
-                  <Line type="monotone" dataKey="leads" stroke="#8b5cf6" strokeWidth={2} name="Leads" />
-                </LineChart>
+                  <Bar dataKey="value" fill="#059669" radius={[4, 4, 0, 0]} />
+                </BarChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6">
+      <div className="grid gap-6 xl:grid-cols-[1fr_0.9fr]">
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Top Scored Leads</CardTitle>
+            <CardTitle>Lead growth by day</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-72">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={topLeadsData} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis type="number" tick={{ fontSize: 12 }} stroke="#9ca3af" domain={[0, 100]} />
-                  <YAxis type="category" dataKey="name" tick={{ fontSize: 12 }} stroke="#9ca3af" width={120} />
-                  <Tooltip />
-                  <Bar dataKey="value" fill="#3b82f6" radius={[0, 4, 4, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+            {stats.lead_trend.length > 0 ? (
+              <div className="h-72">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={stats.lead_trend}>
+                    <CartesianGrid stroke="#e5e7eb" strokeDasharray="3 3" />
+                    <XAxis dataKey="date" tick={{ fontSize: 12 }} stroke="#6b7280" />
+                    <YAxis tick={{ fontSize: 12 }} stroke="#6b7280" />
+                    <Tooltip />
+                    <Bar dataKey="count" fill="#0f766e" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="flex h-72 items-center justify-center rounded-md border border-dashed border-gray-300 text-sm text-gray-500">
+                Add accounts to populate growth analytics.
+              </div>
+            )}
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Monthly Comparison</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Search className="h-5 w-5 text-primary-700" />
+              Recent search intent
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-72">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={searchTrendData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#9ca3af" />
-                  <YAxis tick={{ fontSize: 12 }} stroke="#9ca3af" />
-                  <Tooltip />
-                  <Bar dataKey="searches" fill="#3b82f6" radius={[4, 4, 0, 0]} name="Searches" />
-                  <Bar dataKey="leads" fill="#8b5cf6" radius={[4, 4, 0, 0]} name="Leads" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+            {stats.recent_searches.length > 0 ? (
+              <div className="space-y-2">
+                {stats.recent_searches.map((item, index) => (
+                  <div key={`${item.timestamp}-${index}`} className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2">
+                    <p className="line-clamp-1 text-sm text-gray-800">{item.query}</p>
+                    <p className="mt-1 text-xs text-gray-500">{new Date(item.timestamp).toLocaleDateString()}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-md border border-dashed border-gray-300 p-5 text-sm text-gray-500">
+                No search intent yet.
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

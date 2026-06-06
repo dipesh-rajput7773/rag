@@ -4,9 +4,19 @@ export interface Lead {
   email: string
   status: 'hot' | 'warm' | 'cold'
   notes: string
+  phone?: string
+  company?: string
+  source?: string
   created_at?: string
   updated_at?: string
   relevance_score?: number
+}
+
+export interface PaginatedLeads {
+  leads: Lead[]
+  total: number
+  skip: number
+  limit: number
 }
 
 export interface LeadResult {

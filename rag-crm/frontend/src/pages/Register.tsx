@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { AlertCircle, BrainCircuit, Lock, Mail, User } from 'lucide-react'
+
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Sparkles, Mail, Lock, User, AlertCircle } from 'lucide-react'
+import { Input } from '@/components/ui/input'
 import { register } from '@/lib/api'
 
 export default function Register() {
@@ -17,8 +18,15 @@ export default function Register() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
-    if (!name || !email || !password) { setError('Please fill in all fields'); return }
-    if (password.length < 6) { setError('Password must be at least 6 characters'); return }
+    if (!name || !email || !password) {
+      setError('Please fill in all fields')
+      return
+    }
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters')
+      return
+    }
+
     setLoading(true)
     try {
       const res = await register(name, email, password)
@@ -33,31 +41,29 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-purple-50 flex items-center justify-center p-4">
+    <div className="flex min-h-screen items-center justify-center bg-[#f6f7f4] p-4">
       <Card className="w-full max-w-md">
-        <CardHeader className="text-center pb-2">
-          <div className="flex justify-center mb-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-600 to-purple-600 flex items-center justify-center">
-              <Sparkles className="w-6 h-6 text-white" />
-            </div>
+        <CardHeader className="text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-gray-950 text-primary-300">
+            <BrainCircuit className="h-6 w-6" />
           </div>
-          <CardTitle className="text-2xl">Create your account</CardTitle>
-          <CardDescription>Start your 14-day free trial</CardDescription>
+          <CardTitle className="text-2xl">Create workspace</CardTitle>
+          <CardDescription>Start indexing your B2B service pipeline</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <div className="flex items-center gap-2 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-600">
-                <AlertCircle className="w-4 h-4 shrink-0" />
+              <div className="flex items-center gap-2 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-600">
+                <AlertCircle className="h-4 w-4 shrink-0" />
                 {error}
               </div>
             )}
             <Input
-              label="Full Name"
-              placeholder="John Doe"
+              label="Full name"
+              placeholder="Dipesh Kumar"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              icon={<User className="w-4 h-4" />}
+              icon={<User className="h-4 w-4" />}
             />
             <Input
               label="Email"
@@ -65,23 +71,23 @@ export default function Register() {
               placeholder="you@company.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              icon={<Mail className="w-4 h-4" />}
+              icon={<Mail className="h-4 w-4" />}
             />
             <Input
               label="Password"
               type="password"
-              placeholder="At least 6 characters"
+              placeholder="At least 8 characters"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              icon={<Lock className="w-4 h-4" />}
+              icon={<Lock className="h-4 w-4" />}
             />
-            <Button type="submit" className="w-full" variant="gradient" size="lg" disabled={loading}>
-              {loading ? 'Creating account...' : 'Create Account'}
+            <Button type="submit" className="w-full" size="lg" disabled={loading}>
+              {loading ? 'Creating account...' : 'Create account'}
             </Button>
           </form>
-          <p className="text-center text-sm text-gray-500 mt-6">
-            Already have an account?{' '}
-            <Link to="/login" className="text-primary-600 hover:text-primary-700 font-medium">
+          <p className="mt-6 text-center text-sm text-gray-500">
+            Already have a workspace?{' '}
+            <Link to="/login" className="font-medium text-primary-700 hover:text-primary-900">
               Sign in
             </Link>
           </p>

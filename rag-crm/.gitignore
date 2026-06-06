@@ -1,0 +1,15 @@
+.env
+*.env
+__pycache__/
+*.py[cod]
+
+backend/.env
+backend/venv/
+backend/qdrant_local/
+
+frontend/node_modules/
+frontend/dist/
+
+.DS_Store
+Thumbs.db
+*.log

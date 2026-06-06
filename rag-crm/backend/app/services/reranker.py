@@ -1,15 +1,15 @@
 import logging
 from functools import lru_cache
 
-from sentence_transformers import CrossEncoder
-
 logger = logging.getLogger(__name__)
 
 RERANKER_MODEL = "cross-encoder/ms-marco-MiniLM-L-6-v2"
 
 
 @lru_cache(maxsize=1)
-def get_reranker() -> CrossEncoder:
+def get_reranker():
+    from sentence_transformers import CrossEncoder
+
     return CrossEncoder(RERANKER_MODEL)
 
 
